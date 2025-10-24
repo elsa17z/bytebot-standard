@@ -15,7 +15,8 @@ jobs:
     steps:
       - name: Checkout bytebot-standard repo
         uses: actions/checkout@v3
-        path: bytebot-standard
+        with:
+          path: bytebot-standard
 
       - name: Checkout bytebot-agent-desktop repo (for source files)
         uses: actions/checkout@v3
