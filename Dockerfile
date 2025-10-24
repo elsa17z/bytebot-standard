@@ -158,9 +158,9 @@ RUN rm -f /bytebot/bytebotd/node_modules/@nut-tree-fork/libnut-linux/build/Relea
 # Clean up
 RUN rm -rf /compile
 
-# Copy system configuration files (supervisord, lightdm, etc.) if they exist
-# Note: These will be copied by GitHub Actions from the repo
-COPY root/ / 2>/dev/null || echo "No root directory to copy"
+# Copy system configuration files (supervisord, lightdm, etc.)
+# Note: GitHub Actions creates at least an empty root/ directory
+COPY root/ /
 
 RUN chown -R user:user /home/user
 
