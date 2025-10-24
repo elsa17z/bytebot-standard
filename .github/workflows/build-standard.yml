@@ -48,6 +48,9 @@ jobs:
           # Copy root directory (system configs) if it exists
           if [ -d ../bytebot-agent-desktop/packages/bytebotd/root ]; then
             cp -r ../bytebot-agent-desktop/packages/bytebotd/root ./
+          else
+            # Create empty root directory so COPY doesn't fail
+            mkdir -p root
           fi
 
           echo "Build context prepared"
