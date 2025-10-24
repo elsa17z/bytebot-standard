@@ -1,0 +1,74 @@
+name: Build ByteBot Standard Image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly rebuild (Sunday midnight)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout bytebot-standard repo
+        uses: actions/checkout@v3
+        path: bytebot-standard
+
+      - name: Checkout bytebot-agent-desktop repo (for source files)
+        uses: actions/checkout@v3
+        with:
+          repository: elsa17z/bytebot-agent-desktop
+          path: bytebot-agent-desktop
+          token: ${{ secrets.GH_PAT }}  # Need PAT to access private repo
+
+      - name: Prepare build context
+        run: |
+          # Copy necessary files from private repo to build context
+          # Excluding computer-control module
+
+          cd bytebot-standard
+
+          # Copy packages (excluding computer-control)
+          mkdir -p packages/shared
+          mkdir -p packages/bytebotd/src
+
+          cp -r ../bytebot-agent-desktop/packages/shared/* packages/shared/
+          cp ../bytebot-agent-desktop/packages/bytebotd/package.json packages/bytebotd/
+          cp ../bytebot-agent-desktop/packages/bytebotd/tsconfig.json packages/bytebotd/
+
+          # Copy bytebotd src files EXCEPT computer-control
+          rsync -av --exclude='computer-control' \
+            ../bytebot-agent-desktop/packages/bytebotd/src/ \
+            packages/bytebotd/src/
+
+          # Copy root directory (system configs) if it exists
+          if [ -d ../bytebot-agent-desktop/packages/bytebotd/root ]; then
+            cp -r ../bytebot-agent-desktop/packages/bytebotd/root ./
+          fi
+
+          echo "Build context prepared"
+          ls -la packages/bytebotd/src/
+          echo "computer-control should NOT be listed above"
+
+      - name: Login to GHCR
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build standard image
+        run: |
+          cd bytebot-standard
+          docker build -t ghcr.io/${{ github.repository_owner }}/bytebot-standard:latest .
+
+      - name: Push standard image
+        run: docker push ghcr.io/${{ github.repository_owner }}/bytebot-standard:latest
+
+      - name: Image built successfully
+        run: |
+          echo "✅ ByteBot Standard image built and pushed"
+          echo "📦 Image: ghcr.io/${{ github.repository_owner }}/bytebot-standard:latest"
+          echo "⏱️  Build time: ~18 minutes"
+          echo ""
+          echo "Next step: Make package public at:"
+          echo "https://github.com/${{ github.repository_owner }}?tab=packages"

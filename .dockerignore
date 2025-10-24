@@ -1,0 +1,20 @@
+# Exclude computer-control module (proprietary)
+packages/bytebotd/src/computer-control/
+
+# Exclude build artifacts
+**/node_modules/
+**/dist/
+**/*.log
+
+# Exclude git
+.git/
+.github/
+
+# Exclude docs
+**/*.md
+docs/
+
+# Exclude tests
+**/*.test.ts
+**/*.spec.ts
+tests/
